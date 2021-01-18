@@ -4,6 +4,7 @@ import sun.rmi.log.LogInputStream;
 import java.util.Scanner;
 
 class Nodo {
+    //http://codigolibre.weebly.com/blog/listas-simples-en-java
     // Variable en la cual se va a guardar el valor.
     private int valor;
     // Variable para enlazar los nodos.
@@ -166,7 +167,7 @@ class listaEnlazada {
     }
 }
 
-class Main {
+class Tarea3 {
     //convierte una lista enlazada de enteros a un arreglo de enteror
     public static int[] listaAarreglo(listaEnlazada lista){
         int n=lista.getTamanio();
@@ -193,6 +194,7 @@ class Main {
         listaEnlazada[] listaCursosyRequisito2=listaCursosyRequisito;
         listaEnlazada esRequisito=new listaEnlazada();
         int valor=curso.getValor();
+        esRequisito.agregarAlInicio(valor);//el primer nodo serña el curso
         //esRequisito.agregarAlInicio(valor);//el inicio de la lista es el curso del cual se vera de qué es requisito
         for(int i=0;i<l;i++){
             listaEnlazada lista=listaCursosyRequisito2[i]; //recorrera todas las listas enlazadas
@@ -236,9 +238,11 @@ class Main {
         }
         for(int i=0;i<l;i++){
             Nodo curso=new Nodo();
-            curso.setValor(cursoYnroreq[i][0]); //nro del curso
-            int nroReq=cursoYnroreq[i][1]; //nro de requisitos de ese curso
-            cursosPorNroReq[nroReq].agregarAlInicio(curso.getValor());
+            if(curso.getValor()>=0) {
+                curso.setValor(cursoYnroreq[i][0]); //nro del curso
+                int nroReq = cursoYnroreq[i][1]; //nro de requisitos de ese curso
+                if(nroReq>-1) cursosPorNroReq[nroReq].agregarAlInicio(curso.getValor());
+            }
         }
         return cursosPorNroReq;
     }
@@ -259,39 +263,30 @@ class Main {
         return ind;
     }
 
-    //dado un curso, una matriz de enteros que señala el curso y su nro de requisitos, y un arreglo de listas
-    // que salen los cursos junto a sus requisitos --> retorna un arreglo de listas  de los cursos con sus requisitos ACTUALIZADA
-    //borra curso1 de los requisitos de los cursos que tengan a curso1 como requisito
-    public static listaEnlazada[] actualizaLista(Nodo curso1, int[][] curso_y_numReq ,listaEnlazada[] listaCursosyReq, listaEnlazada[] req_por_curso) {
-        //genero la lista de los cursos que tienen de requisito a curso1
-        int l=listaCursosyReq.length;
-        listaEnlazada req_a_curso=cursoEsRequisito(curso1,listaCursosyReq);
-        int[] req_a_curso2 = listaAarreglo(req_a_curso); //pasa a un arreglo para q sea mas facil hacer un for
+    //dado un curso1 sin requisitos, una matriz que dice el curso y su nro de requisitos y un arreglo de listas en donde sale el curso con todos
+    //sus requisitos --> retornara una arreglo de lista enlazada que contiene los cursos segun su nro de requisitos
+    public static listaEnlazada[] actualizaLista(Nodo curso1, int[][] curso_y_numReq,listaEnlazada[] listaCursosyReq){
+        int n=listaCursosyReq.length;
+        listaEnlazada req_a_curso1=cursoEsRequisito(curso1,listaCursosyReq); //cursos que tienen de requisito a curso1
+        req_a_curso1.removerPorReferencia(curso1.getValor()); //elimino el primer nodo que es el curso1
+        int[] req_a_curso2 = listaAarreglo(req_a_curso1); //pasa a un arreglo para q sea mas facil hacer un for
         int t = req_a_curso2.length ; //nro de cursos que tienen de requisito a curso1
-        //genero un arreglo de los indices en que se encuentran los cursos
+        //los indices que tienen los cursos que tienen de requisito a curso 1
         int[] indices = new int[t];
         for (int i = 0; i < t; i++) {
             int curso = req_a_curso2[i];
             indices[i] = indice(curso, curso_y_numReq);
         }
-        //resto un requisito
-        for (int i : indices){
-            if(curso_y_numReq[i][1]>0){
-                curso_y_numReq[i][1] -= 1; //le resto un requisito
-            }
+        for(int i: indices){
+            curso_y_numReq[i][1]-=1; //le resto un requisito a los cursos que tienen de requisito a curso 1
         }
-        //actualizo el arreglo de listas segun nro de requisitos
-        req_por_curso=numDeRequisito(curso_y_numReq);
-        //elimino el nodo
-        for(int i=0;i<l;i++){
-            listaCursosyReq[i].removerPorReferencia(curso1.getValor());
-        }
-        listaEnlazada[] cursosYreq=listaCursosyReq;
-        return cursosYreq;
+        listaEnlazada[] cursos_segun_req=new listaEnlazada[n];
+        cursos_segun_req=numDeRequisito(curso_y_numReq);
+        return cursos_segun_req;
 
     }
 
-    public static void main(String[] args){
+    public static void cursosPorOrden(){
         Scanner sc = new Scanner(System.in);
         String n1=sc.nextLine(); //nro de cursos
         int n=Integer.parseInt(n1);
@@ -305,22 +300,19 @@ class Main {
             int[] listanro = new int[l];  //lista del curso con sus requisitos
             listaEnlazada listaCursos = new listaEnlazada();
             for (int j = 0; j < l; j++) {
-                 //hacer lista enlazada segun el nro requistos
+                //hacer lista enlazada segun el nro requistos
                 listanro[j] = Integer.parseInt(s1[j]); //lista del curso con sus requisitos
                 if (j == 0) { //el primer curso (principal)
                     nro_requisitos[i][0] = listanro[j];
                     Nodo curso = new Nodo();
                     curso.setValor(nro_requisitos[i][j]);
-                    //System.out.println(curso.getValor());
                     listaCursos.agregarAlInicio(curso.getValor()); //el inicio de la lista sera el curso
                 }
                 else {
                     Nodo requisito = new Nodo();
                     requisito.setValor(listanro[j]);
-                    //System.out.println(requisito.getValor());
                     listaCursos.agregarAlFinal(requisito.getValor()); //agrega los cursos que son requisito a la lista enlazada
                 }
-                //cursosYreq[i]=listaCursos;
             }
             cursosYreq[i]=listaCursos;
         }
@@ -329,23 +321,17 @@ class Main {
         //--------------------------------//
         //Imprimiendo los cursos sin requisitos
         listaEnlazada[] nroRequisitosPorCurso=new listaEnlazada[n];
-        nroRequisitosPorCurso=numDeRequisito(nro_requisitos);
-        listaEnlazada lista_sin_req=new listaEnlazada(); //lista que se imprimira segun el orden en q se fue tomando
+        nroRequisitosPorCurso=numDeRequisito(nro_requisitos); //arreglo de ListaEnlazada que guarda los cursos segun el nro de requisitos
         //debe parar cuando no haya ningun curso por tomar
-        while (lista_sin_req.getTamanio() < n) {
+        while (nroRequisitosPorCurso[0].getTamanio()!=0) {
             Nodo aux = nroRequisitosPorCurso[0].getInicio(); //el primer curso sin requisito
-            //si no se ha agregado antes
-            if(lista_sin_req.buscar(aux.getValor())==false) lista_sin_req.agregarAlFinal(aux.getValor()); //agrego a la lista de los cursos que ya no tienen requisitos (Se imprimira dps)
-            cursosYreq = actualizaLista(aux, nro_requisitos, cursosYreq, nroRequisitosPorCurso); //actualizo los cursos (se van eliminando)
-            nroRequisitosPorCurso= numDeRequisito(nro_requisitos);
-            nroRequisitosPorCurso[0].removerPorReferencia(aux.getValor()); //elimino el curso de los SIN requisitos
+            imprime(aux);
+            listaEnlazada[] nroReq2=actualizaLista(aux,nro_requisitos,cursosYreq);
+            nroRequisitosPorCurso=nroReq2;
         }
-
-        Nodo aux1 = lista_sin_req.getInicio();
-        while (aux1!=null){
-            imprime(aux1);
-            aux1=aux1.getSiguiente();
-        }
+    }
+    public static void main(String[] args){
+        cursosPorOrden();
     }
 
 }
